@@ -1,0 +1,12 @@
+# Gemini/Agent files
+.agent/
+.macros/
+.README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
