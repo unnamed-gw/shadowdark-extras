@@ -4186,6 +4186,99 @@ async function openJournalPageEditor(actor, pageId, sheetApp) {
 			await updateJournalPage(this.actorDoc, this.page.id, { content: content });
 			this.sheetApp.render(false);
 		}
+
+		activateListeners(html) {
+			super.activateListeners(html);
+
+			const form = html[0] ?? html;
+
+			// HTML snippets for quick-insert
+			const snippets = {
+				'callout-info': '<div class="sdx-callout sdx-callout-info"><p>Information text here...</p></div>',
+				'callout-warning': '<div class="sdx-callout sdx-callout-warning"><p>Warning text here...</p></div>',
+				'callout-danger': '<div class="sdx-callout sdx-callout-danger"><p>Danger text here...</p></div>',
+				'callout-success': '<div class="sdx-callout sdx-callout-success"><p>Success text here...</p></div>',
+				'callout-quest': '<div class="sdx-callout sdx-callout-quest"><p><strong>Quest:</strong> Quest details here...</p></div>',
+				'callout-loot': '<div class="sdx-callout sdx-callout-loot"><p><strong>Loot:</strong> Treasure description here...</p></div>',
+				'callout-npc': '<div class="sdx-callout sdx-callout-npc"><p>"NPC dialogue or quote here..."</p></div>',
+				'divider-swords': '<div class="sdx-divider sdx-divider-swords"></div>',
+				'divider-stars': '<div class="sdx-divider sdx-divider-stars"></div>',
+				'divider-skulls': '<div class="sdx-divider sdx-divider-skulls"></div>',
+				'divider-crowns': '<div class="sdx-divider sdx-divider-crowns"></div>',
+				'divider-simple': '<div class="sdx-divider sdx-divider-simple"></div>'
+			};
+
+			// Store reference to 'this' for use in event handlers
+			const editorApp = this;
+
+			// Quick-insert button handlers
+			form.querySelectorAll('.sdx-quick-insert-btn[data-insert]').forEach(btn => {
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					const insertType = btn.dataset.insert;
+					const snippet = snippets[insertType];
+					if (!snippet) return;
+
+					// Try to access ProseMirror through Foundry's editor reference
+					// The editors are stored in this.editors by target name
+					const contentEditor = editorApp.editors?.content;
+
+					if (contentEditor?.instance) {
+						// Foundry v12+ stores the ProseMirror instance
+						const pm = contentEditor.instance;
+						if (pm.view) {
+							const view = pm.view;
+							const state = view.state;
+							const schema = state.schema;
+
+							// Parse the HTML snippet into ProseMirror nodes
+							const domParser = pm.constructor.DOMParser || ProseMirror?.DOMParser;
+							if (domParser) {
+								try {
+									const parser = domParser.fromSchema(schema);
+									const tempDiv = document.createElement('div');
+									tempDiv.innerHTML = snippet;
+									const doc = parser.parse(tempDiv);
+
+									// Create transaction to insert at end of document
+									const tr = state.tr;
+									const endPos = state.doc.content.size;
+									tr.insert(endPos, doc.content);
+									view.dispatch(tr);
+									view.focus();
+
+									console.log("SDX Journal: Inserted via ProseMirror transaction");
+									return;
+								} catch (err) {
+									console.warn("SDX Journal: ProseMirror insertion failed:", err);
+								}
+							}
+						}
+					}
+
+					// Simply append to the end of the HTML content
+					const sourceBtn = form.querySelector('button[data-action="source-code"]');
+					if (sourceBtn) {
+						console.log("SDX Journal: Inserting snippet at end");
+						sourceBtn.click();
+
+						// Wait for source mode to activate, then insert at end
+						setTimeout(() => {
+							const textarea = form.querySelector('.editor-content textarea');
+							if (textarea) {
+								textarea.value = textarea.value + snippet;
+								textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+								// Switch back to rich text mode
+								setTimeout(() => sourceBtn.click(), 100);
+							}
+						}, 100);
+					}
+				});
+			});
+
+		}
 	}
 
 	const editor = new JournalPageEditor(actor, page, sheetApp);
@@ -15567,3 +15660,105 @@ Hooks.on("createToken", async (tokenDoc, options, userId) => {
 		}, 100);
 	}
 });
+
+// ============================================
+// SPELLBOOK COMPENDIUM FILTER
+// ============================================
+
+/**
+ * Inject a compendium filter dropdown into the SpellBookSD dialog
+ * Allows users to filter spells by compendium
+ */
+function injectSpellbookCompendiumFilter(app, html) {
+	const header = html.find(".SD-header");
+	if (!header.length) return;
+
+	// Get all compendiums that contain spells
+	const spellPacks = [];
+	for (const pack of game.packs) {
+		if (pack.metadata.type !== "Item") continue;
+		// Check if pack has any spells in its index
+		const hasSpells = pack.index.some(i => i.type === "Spell");
+		if (hasSpells) {
+			spellPacks.push({
+				id: pack.collection,
+				name: pack.metadata.label
+			});
+		}
+	}
+
+	// Sort packs alphabetically
+	spellPacks.sort((a, b) => a.name.localeCompare(b.name));
+
+	// Build the dropdown options
+	const allLabel = game.i18n.localize("SHADOWDARK_EXTRAS.spellbook.compendiumFilter.all");
+	let optionsHtml = `<option value="">${allLabel}</option>`;
+	for (const pack of spellPacks) {
+		optionsHtml += `<option value="${pack.id}">${pack.name}</option>`;
+	}
+
+	// Create the filter dropdown
+	const filterLabel = game.i18n.localize("SHADOWDARK_EXTRAS.spellbook.compendiumFilter.label");
+	const filterHtml = `
+		<div class="sdx-spellbook-filter">
+			<label>${filterLabel}</label>
+			<select class="sdx-spellbook-compendium-select">
+				${optionsHtml}
+			</select>
+		</div>
+	`;
+
+	// Insert before navigation tabs
+	const nav = html.find(".SD-nav");
+	if (nav.length) {
+		nav.before(filterHtml);
+	} else {
+		// Fallback: insert after header
+		header.after(filterHtml);
+	}
+
+	// Add event listener
+	const select = html.find(".sdx-spellbook-compendium-select");
+	select.on("change", (event) => {
+		const selectedCompendium = event.currentTarget.value;
+		filterSpellsByCompendium(html, selectedCompendium);
+	});
+}
+
+/**
+ * Filter the spell list by hiding/showing items based on their compendium
+ * @param {jQuery} html - The dialog HTML
+ * @param {string} compendiumId - The compendium ID to filter by, or empty for all
+ */
+function filterSpellsByCompendium(html, compendiumId) {
+	const spellItems = html.find(".SD-list .item[data-uuid]");
+
+	spellItems.each((index, element) => {
+		const $item = $(element);
+		const uuid = $item.data("uuid");
+
+		if (!compendiumId) {
+			// Show all
+			$item.show();
+		} else {
+			// Check if the UUID starts with the compendium ID
+			// UUID format: Compendium.module.pack.itemId
+			if (uuid && uuid.startsWith(`Compendium.${compendiumId}`)) {
+				$item.show();
+			} else {
+				$item.hide();
+			}
+		}
+	});
+
+	// Update the count display if needed (future enhancement)
+}
+
+// Hook into the SpellBookSD rendering
+Hooks.on("renderApplication", (app, html, data) => {
+	// Check if this is the SpellBookSD app
+	if (app.constructor.name === "SpellBookSD") {
+		injectSpellbookCompendiumFilter(app, html);
+	}
+});
+

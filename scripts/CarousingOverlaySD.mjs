@@ -15,7 +15,9 @@ import {
     setCarousingTier,
     setCarousingTable,
     setPlayerConfirmation,
+    setPlayerModifier,
     executeCarousingRolls,
+    getRenownBonus,
     resetCarousingSession,
     pruneOfflineCarousingData,
     addCarousingResult,
@@ -178,27 +180,19 @@ export default class CarousingOverlaySD extends Application {
         // Get ONLINE PLAYERS and calculate split cost
         const onlinePlayers = this._getOnlinePlayers(session, activeTable);
 
-        // Calculate cost per player (Split) - must happen before checking canAfford
+        // Get participants and calculate selected tier info for display
+        let participants = onlinePlayers.filter(p => p.hasDrop);
         let selectedTierCost = 0;
         let selectedTierDescription = "";
         let selectedTierBonus = 0;
 
-        // Get participants who have dropped a character
-        let participants = onlinePlayers.filter(p => p.hasDrop);
-
         if (session.selectedTier !== null && activeTable.tiers[session.selectedTier]) {
             const tier = activeTable.tiers[session.selectedTier];
-            const totalOptionCost = tier.cost;
             selectedTierDescription = tier.description || "";
             selectedTierBonus = tier.bonus || 0;
 
-            const count = participants.length > 0 ? participants.length : 1;
-            selectedTierCost = Math.ceil(totalOptionCost / count);
-
-            // Update canAfford for all online players based on the SPLIT cost
-            onlinePlayers.forEach(p => {
-                p.canAfford = p.actorGp >= selectedTierCost;
-            });
+            const participantCount = participants.length > 0 ? participants.length : 1;
+            selectedTierCost = Math.ceil(tier.cost / participantCount);
         }
 
         // Recalculate allConfirmed and allCanAfford AFTER updating canAfford
@@ -256,7 +250,11 @@ export default class CarousingOverlaySD extends Application {
     _getOnlinePlayers(session, activeTable) {
         const drops = getCarousingDrops();
         const selectedTier = session.selectedTier !== null ? activeTable.tiers[session.selectedTier] : null;
-        const cost = selectedTier?.cost || 0;
+        const totalTierCost = selectedTier?.cost || 0;
+
+        // Calculate split cost
+        const participantCount = Object.values(drops).length;
+        const splitCost = Math.ceil(totalTierCost / Math.max(1, participantCount));
 
         return game.users.filter(user => {
             if (!user.active) return false;
@@ -267,11 +265,20 @@ export default class CarousingOverlaySD extends Application {
             const droppedActorId = drops[user.id];
             const droppedActor = droppedActorId ? game.actors.get(droppedActorId) : null;
             const actorGp = droppedActor ? this._getActorTotalGp(droppedActor) : 0;
-            const canAfford = actorGp >= cost;
+            const canAfford = actorGp >= splitCost;
             const isConfirmed = session.confirmations[user.id] === true;
             const result = session.results?.[user.id];
             const renown = droppedActor ? (droppedActor.getFlag(MODULE_ID, "renown") || 0) : 0;
-            const totalBonus = selectedTier ? (selectedTier.bonus + renown) : renown;
+            const renownBonus = getRenownBonus(renown);
+            const totalBonus = selectedTier ? (selectedTier.bonus + renownBonus) : renownBonus;
+
+            // Get GM modifiers for this player
+            const playerMods = session.modifiers?.[user.id] || {};
+            const modifiers = {
+                outcome: playerMods.outcome || "",
+                benefits: playerMods.benefits || "",
+                mishaps: playerMods.mishaps || ""
+            };
 
             // Get owned actors for character selection
             const ownedActors = game.actors.filter(a =>
@@ -300,7 +307,9 @@ export default class CarousingOverlaySD extends Application {
                 isConfirmed: isConfirmed,
                 result: result,
                 renown: renown,
+                renownBonus: renownBonus,
                 totalBonus: totalBonus,
+                modifiers: modifiers,
                 ownedActors: ownedActors,
                 hasMultipleActors: ownedActors.length > 1
             };
@@ -453,6 +462,46 @@ export default class CarousingOverlaySD extends Application {
                 // Disabled for now - user must use X button
             }
         });
+
+        // Modifiers
+        html.find('.sdx-modifier-input').on('change', this._onModifierChange.bind(this));
+        html.find('[data-action="toggle-modifiers"]').click(this._onToggleModifiers.bind(this));
+    }
+
+    async _onModifierChange(event) {
+        event.preventDefault();
+        if (!game.user.isGM) return;
+
+        const input = event.currentTarget;
+        const userId = input.closest('[data-user-id]').dataset.userId;
+        const modType = input.dataset.modType;
+        const value = input.value;
+
+        await setPlayerModifier(userId, modType, value);
+    }
+
+    _onToggleModifiers(event) {
+        event.preventDefault();
+        const btn = event.currentTarget;
+        const card = btn.closest('.sdx-carousing-overlay-card');
+        const drawer = card.querySelector('.sdx-modifiers-drawer');
+
+        const isExpanded = drawer.classList.contains('expanded');
+
+        drawer.classList.toggle('expanded');
+        btn.classList.toggle('active');
+
+        if (!isExpanded) {
+            // Temporarily remove max-height to get accurate scrollHeight
+            drawer.style.maxHeight = "none";
+            const fullHeight = drawer.scrollHeight;
+            drawer.style.maxHeight = "0px";
+            // Force reflow then set final height
+            drawer.offsetHeight;
+            drawer.style.maxHeight = fullHeight + "px";
+        } else {
+            drawer.style.maxHeight = "0px";
+        }
     }
 
     /**

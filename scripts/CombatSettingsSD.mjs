@@ -1405,6 +1405,7 @@ export async function injectDamageCard(message, html, data) {
 		if (item && ["Spell", "Scroll", "Wand", "NPC Spell", "Potion"].includes(item.type)) {
 			itemType = item.type; // Store item type for later checks
 			spellDamageConfig = item.flags?.["shadowdark-extras"]?.spellDamage;
+			console.log("shadowdark-extras | spellDamageConfig for", item.name, ":", spellDamageConfig, "effects:", spellDamageConfig?.effects);
 			if (spellDamageConfig?.enabled) {
 				isSpellWithDamage = true;
 				console.log("shadowdark-extras | Item has damage configuration:", spellDamageConfig);
@@ -2388,7 +2389,11 @@ export async function injectDamageCard(message, html, data) {
 	// Default to true for backwards compatibility if setting doesn't exist yet
 	const shouldAutoApplyConditions = settings.damageCard.autoApplyConditions !== false;
 
-	if ((shouldAutoApplyDamage || shouldAutoApplyConditions) && targets.length > 0 && messageAuthorId === game.user.id) {
+	// For self-targeting spells, allow auto-apply even without external targets
+	const effectsApplyToTargetAuto = spellDamageConfig?.effectsApplyToTarget === true;
+	const hasSelfTargetAuto = !effectsApplyToTargetAuto && actor;
+	const hasValidTargets = targets.length > 0 || hasSelfTargetAuto;
+	if ((shouldAutoApplyDamage || shouldAutoApplyConditions) && hasValidTargets && messageAuthorId === game.user.id) {
 		// Check if this was an attack that hit
 		const shadowdarkRolls = message.flags?.shadowdark?.rolls;
 		const mainRoll = shadowdarkRolls?.main;
@@ -2860,9 +2865,11 @@ async function buildDamageCardHtml(actor, targets, totalDamage, damageType, allE
 	}
 
 	// Condition button (separate from damage - can appear even for effect-only spells/weapons)
-	if (allEffects && allEffects.length > 0 && targets.length > 0) {
+	// For self-targeting effects, show button even without targets (caster is the target)
+	const effectsApplyToTarget = spellDamageConfig?.effectsApplyToTarget === true;
+	const hasSelfTarget = !effectsApplyToTarget && actor;
+	if (allEffects && allEffects.length > 0 && (targets.length > 0 || hasSelfTarget)) {
 		const effectsJson = JSON.stringify(allEffects);
-		const effectsApplyToTarget = spellDamageConfig?.effectsApplyToTarget === true;
 		const effectsRequirement = spellDamageConfig?.effectsRequirement || '';
 
 		// Include spell info for focus spell tracking
@@ -3049,14 +3056,44 @@ function rebuildTargetsList($card, messageId, baseDamage) {
 		targetsHtml = '<div class="sdx-no-targets">No ' + tabName.toLowerCase() + ' tokens</div>';
 	}
 
+	// Preserve existing Apply Condition button data before rebuilding
+	const $existingConditionBtn = $card.find('.sdx-apply-condition-btn');
+	let conditionButtonHtml = '';
+	if ($existingConditionBtn.length > 0) {
+		// Recreate the condition button with same attributes
+		const effectsData = $existingConditionBtn.attr('data-effects') || '';
+		const applyToTarget = $existingConditionBtn.attr('data-apply-to-target') || 'true';
+		const effectsRequirement = $existingConditionBtn.attr('data-effects-requirement') || '';
+		const spellInfoData = $existingConditionBtn.attr('data-spell-info') || '';
+		const effectSelectionMode = $existingConditionBtn.attr('data-effect-selection-mode') || 'all';
+
+		conditionButtonHtml = `
+			<button type="button" class="sdx-apply-condition-btn"
+				data-effects='${effectsData}'
+				data-apply-to-target="${applyToTarget}"
+				data-effects-requirement="${effectsRequirement}"
+				data-spell-info="${spellInfoData}"
+				data-effect-selection-mode="${effectSelectionMode}">
+				<i class="fas fa-wand-sparkles"></i> APPLY EFFECTS
+			</button>`;
+	}
+
 	// Build apply button with appropriate text for damage type
+	const baseDamageValue = parseInt($card.data('base-damage')) || baseDamage;
 	const buttonText = isHealing ? 'APPLY HEALING' : 'APPLY DAMAGE';
 	const buttonIcon = isHealing ? 'fa-heart-pulse' : 'fa-hand-sparkles';
-	const applyButtonHtml = cardSettings.showApplyButton ?
+	// Only show damage button if there's actual damage to apply
+	const applyDamageButtonHtml = cardSettings.showApplyButton && baseDamageValue > 0 ?
 		`<button type="button" class="sdx-apply-damage-btn" data-damage-type="${damageType}"><i class="fas ${buttonIcon}"></i> ${buttonText}</button>` : '';
 
+	// Combine buttons in a wrapper if any exist
+	let buttonsHtml = '';
+	if (applyDamageButtonHtml || conditionButtonHtml) {
+		buttonsHtml = '<div class="sdx-damage-actions">' + applyDamageButtonHtml + conditionButtonHtml + '</div>';
+	}
+
 	// Replace the content
-	$card.find('.sdx-damage-card-content').html(targetsHtml + applyButtonHtml);
+	$card.find('.sdx-damage-card-content').html(targetsHtml + buttonsHtml);
 
 	// Re-attach listeners for new elements
 	attachMultiplierListeners($card);
@@ -4065,10 +4102,19 @@ function attachDamageCardListeners(html, messageId) {
 					: true;
 
 				// Determine which tokens to apply this effect to
+				// Tab override: If there are targets shown in the current tab, use those
+				// regardless of the effectApplyToTarget setting. This allows users to
+				// manually apply self-effects to other tokens via Selected/Targeted tabs.
 				let effectTargets = [];
-				if (effectApplyToTarget) {
+				if (cardTargets.length > 0) {
+					// Use targets from the current tab (override)
 					effectTargets = cardTargets;
+					console.log(`shadowdark-extras | Using ${cardTargets.length} target(s) from current tab (overriding applyToTarget: ${effectApplyToTarget})`);
+				} else if (effectApplyToTarget) {
+					// No targets in tab, but configured to apply to target - keep empty (will show warning)
+					effectTargets = [];
 				} else {
+					// No targets in tab and configured for self - apply to caster
 					if (casterToken) effectTargets = [casterToken];
 				}
 

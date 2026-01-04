@@ -254,6 +254,55 @@ async function startFocusSpell(actor, spell, perTurnConfig = null) {
 
 	await actor.setFlag(MODULE_ID, FOCUS_SPELL_FLAG, currentFocus);
 
+	// Add Concentration effect to the actor
+	const concentrationIcon = "icons/magic/time/hourglass-tilted-glowing-gold.webp";
+	const concentrationName = game.i18n.format("SHADOWDARK_EXTRAS.focus_tracker.concentration_name", { spellName: spell.name });
+	const concentrationDesc = game.i18n.format("SHADOWDARK_EXTRAS.focus_tracker.concentration_description", { spellName: spell.name });
+
+	const effectData = {
+		name: concentrationName,
+		type: "Effect",
+		img: concentrationIcon,
+		system: {
+			description: concentrationDesc,
+			duration: {
+				type: "focus",
+				value: 0,
+				unit: ""
+			}
+		},
+		effects: [{
+			name: concentrationName,
+			icon: concentrationIcon,
+			origin: spell.uuid,
+			transfer: true,
+			statuses: ["concentration"],
+			disabled: false
+		}],
+		flags: {
+			[MODULE_ID]: {
+				isConcentration: true,
+				spellId: spell.id
+			}
+		}
+	};
+
+	try {
+		const created = await actor.createEmbeddedDocuments("Item", [effectData]);
+		if (created.length > 0) {
+			const effectId = created[0].id;
+			// Update the focus entry with the effect ID
+			const updatedFocus = actor.getFlag(MODULE_ID, FOCUS_SPELL_FLAG) || [];
+			const entryIndex = updatedFocus.findIndex(f => f.spellId === spell.id);
+			if (entryIndex >= 0) {
+				updatedFocus[entryIndex].concentrationEffectId = effectId;
+				await actor.setFlag(MODULE_ID, FOCUS_SPELL_FLAG, updatedFocus);
+			}
+		}
+	} catch (err) {
+		console.error("shadowdark-extras | Failed to create concentration effect:", err);
+	}
+
 	// Notify user
 	ui.notifications.info(game.i18n.format("SHADOWDARK_EXTRAS.focus_tracker.started", { spellName: spell.name }));
 
@@ -1121,8 +1170,8 @@ async function handleDurationSpellCombatUpdate(combat, changed, options, userId)
 			// Use instanceId if available, fallback to spellId
 			const spellInstanceId = durationSpell.instanceId || durationSpell.spellId;
 
-			// Check for expiry
-			if (currentRound > durationSpell.expiryRound) {
+			// Check for expiry - use >= so spell expires ON the expiry round, not after
+			if (currentRound >= durationSpell.expiryRound) {
 				console.log(`shadowdark-extras | Duration spell ${durationSpell.spellName} has expired`);
 				expiredSpellIds.push(spellInstanceId);
 				continue;
@@ -1320,6 +1369,23 @@ export async function linkEffectToDurationSpell(casterActorOrId, instanceId, tar
 		effectItemId: effectItemId,
 		targetName: targetActor?.name || "Unknown"
 	});
+
+	// Also add to main targets array if not already present (for UI display)
+	// This ensures self-targeted spells show correct target count
+	if (targetActor || targetTokenId) {
+		const targetAlreadyInList = durationEntry.targets.some(t =>
+			(t.actorId && t.actorId === targetActor?.id) ||
+			(t.tokenId && t.tokenId === targetTokenId)
+		);
+		if (!targetAlreadyInList) {
+			durationEntry.targets.push({
+				tokenId: targetTokenId || null,
+				actorId: targetActor?.id || null,
+				name: targetActor?.name || "Unknown"
+			});
+			console.log(`shadowdark-extras | Added target to duration spell targets: ${targetActor?.name || targetTokenId}`);
+		}
+	}
 
 	await caster.setFlag(MODULE_ID, DURATION_SPELL_FLAG, activeDuration);
 
@@ -1650,6 +1716,26 @@ export async function endFocusSpell(casterId, spellId, reason = "manual") {
 	});
 
 	await Promise.all(removalPromises);
+
+	// Remove the Concentration effect from the caster
+	if (focusEntry.concentrationEffectId) {
+		const effectItem = caster.items.get(focusEntry.concentrationEffectId);
+		if (effectItem) {
+			await effectItem.delete();
+			console.log(`shadowdark-extras | Removed concentration effect ${effectItem.name} from caster`);
+		}
+	} else {
+		// Fallback: search for any concentration effect linked to this spell
+		const strayEffect = caster.items.find(i =>
+			i.type === "Effect" &&
+			i.flags?.[MODULE_ID]?.isConcentration &&
+			i.flags?.[MODULE_ID]?.spellId === spellId
+		);
+		if (strayEffect) {
+			await strayEffect.delete();
+			console.log(`shadowdark-extras | Removed stray concentration effect ${strayEffect.name} from caster`);
+		}
+	}
 
 	// Remove the focus entry from tracking
 	activeFocus.splice(focusIndex, 1);

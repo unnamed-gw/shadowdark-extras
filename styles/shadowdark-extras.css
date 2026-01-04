@@ -14105,3 +14105,938 @@ body:not(.game-master) .sdx-carousing-chat .sdx-player-only {
         transform: translateY(-10px);
     }
 }
+
+/* ============================================
+   ENHANCED JOURNAL CONTENT STYLING
+   Fantasy-themed rendering for journal notes
+   ============================================ */
+
+/* --- Fantasy Headers --- */
+.sdx-journal-page-content h1 {
+    font-family: 'Old Newspaper Font', 'Modesto Condensed', 'Palatino Linotype', serif;
+    font-size: 32px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #c9aa58 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid;
+    border-image: linear-gradient(90deg, transparent 0%, #c9aa58 20%, #c9aa58 80%, transparent 100%) 1;
+    padding-bottom: 8px;
+    margin: 24px 0 16px 0;
+    text-align: center;
+}
+
+.sdx-journal-page-content h2 {
+    font-family: 'Old Newspaper Font', 'Modesto Condensed', 'Palatino Linotype', serif;
+    font-size: 22px;
+    font-weight: bold;
+    color: #d4b86a !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid rgba(201, 170, 88, 0.4);
+    padding-bottom: 6px;
+    margin: 20px 0 12px 0;
+}
+
+.sdx-journal-page-content h3 {
+    font-family: 'Modesto Condensed', 'Palatino Linotype', serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: #e0c98a !important;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    margin: 16px 0 10px 0;
+}
+
+.sdx-journal-page-content h4,
+.sdx-journal-page-content h5,
+.sdx-journal-page-content h6 {
+    font-family: 'Modesto Condensed', 'Palatino Linotype', serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #e8d5a0 !important;
+    margin: 14px 0 8px 0;
+}
+
+
+
+/* --- Elegant Blockquotes --- */
+.sdx-journal-page-content blockquote {
+    position: relative;
+    margin: 16px 0;
+    padding: 16px 20px 16px 48px;
+    background: linear-gradient(135deg, rgba(60, 50, 40, 0.6) 0%, rgba(40, 35, 30, 0.7) 100%);
+    border-left: 4px solid #c9aa58;
+    border-radius: 0 8px 8px 0;
+    color: #d4d0c8 !important;
+    font-style: italic;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sdx-journal-page-content blockquote::before {
+    content: '"';
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    font-size: 48px;
+    font-family: 'Georgia', serif;
+    color: rgba(201, 170, 88, 0.5);
+    line-height: 1;
+}
+
+.sdx-journal-page-content blockquote p {
+    margin: 0 0 8px 0;
+    color: #d4d0c8 !important;
+}
+
+.sdx-journal-page-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* --- Styled Lists --- */
+.sdx-journal-page-content ul {
+    list-style: none;
+    padding-left: 20px;
+}
+
+.sdx-journal-page-content ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+}
+
+.sdx-journal-page-content ul li::before {
+    content: '◆';
+    position: absolute;
+    left: 0;
+    color: #c9aa58;
+    font-size: 10px;
+    top: 4px;
+}
+
+.sdx-journal-page-content ol {
+    padding-left: 24px;
+    counter-reset: journal-counter;
+    list-style: none;
+}
+
+.sdx-journal-page-content ol li {
+    position: relative;
+    padding-left: 8px;
+    margin-bottom: 6px;
+    counter-increment: journal-counter;
+}
+
+.sdx-journal-page-content ol li::before {
+    content: counter(journal-counter) '.';
+    position: absolute;
+    left: -24px;
+    color: #c9aa58;
+    font-weight: bold;
+    font-family: 'Modesto Condensed', serif;
+}
+
+/* --- Decorative Horizontal Rules --- */
+.sdx-journal-page-content hr {
+    border: none;
+    height: 20px;
+    margin: 20px 0;
+    background: transparent;
+    position: relative;
+}
+
+.sdx-journal-page-content hr::before {
+    content: '⚔ ✦ ⚔';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #c9aa58;
+    font-size: 14px;
+    letter-spacing: 8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.sdx-journal-page-content hr::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(201, 170, 88, 0.5) 20%, transparent 45%, transparent 55%, rgba(201, 170, 88, 0.5) 80%, transparent 100%);
+}
+
+/* --- Fantasy Tables --- */
+.sdx-journal-page-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    background: linear-gradient(180deg, rgba(40, 35, 30, 0.8) 0%, rgba(30, 25, 20, 0.9) 100%);
+    border: 2px solid rgba(201, 170, 88, 0.4);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.sdx-journal-page-content table thead tr,
+.sdx-journal-page-content table tr:first-child {
+    background: linear-gradient(180deg, rgba(80, 65, 40, 0.9) 0%, rgba(60, 50, 35, 0.9) 100%);
+}
+
+.sdx-journal-page-content table thead th,
+.sdx-journal-page-content table thead td,
+.sdx-journal-page-content table tr:first-child th,
+.sdx-journal-page-content table tr:first-child td {
+    padding: 10px 12px;
+    text-align: center !important;
+    font-family: 'Old Newspaper Font', 'Modesto Condensed', serif !important;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ffffff !important;
+    border-bottom: 2px solid rgba(201, 170, 88, 0.5);
+}
+
+.sdx-journal-page-content table td {
+    padding: 8px 12px;
+    color: #e0dcd4 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sdx-journal-page-content table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sdx-journal-page-content table tbody tr:hover {
+    background: rgba(201, 170, 88, 0.1);
+}
+
+/* --- Code Blocks --- */
+.sdx-journal-page-content code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #7dd3fc !important;
+    font-size: 0.9em;
+}
+
+.sdx-journal-page-content pre {
+    background: linear-gradient(180deg, rgba(20, 20, 25, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%);
+    border: 1px solid rgba(100, 100, 120, 0.3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    overflow-x: auto;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.sdx-journal-page-content pre code {
+    background: none;
+    padding: 0;
+    color: #e2e8f0 !important;
+}
+
+/* --- Strong and Emphasis --- */
+.sdx-journal-page-content strong,
+.sdx-journal-page-content b {
+    color: #f0e6d2 !important;
+    font-weight: bold;
+}
+
+.sdx-journal-page-content em,
+.sdx-journal-page-content i {
+    color: #d4cfc7 !important;
+    font-style: italic;
+}
+
+/* ============================================
+   CALLOUT BOXES
+   Add class="sdx-callout sdx-callout-TYPE" to divs
+   ============================================ */
+
+.sdx-journal-page-content .sdx-callout {
+    position: relative;
+    margin: 16px 0;
+    padding: 14px 16px 14px 48px;
+    border-radius: 6px;
+    border-left: 4px solid;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sdx-journal-page-content .sdx-callout::before {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    font-family: 'Font Awesome 6 Pro', 'Font Awesome 6 Free', 'Font Awesome 5 Pro', 'Font Awesome 5 Free', FontAwesome;
+    font-weight: 900;
+    font-size: 18px;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Info Callout - Blue */
+.sdx-journal-page-content .sdx-callout-info {
+    background: linear-gradient(135deg, rgba(30, 58, 95, 0.7) 0%, rgba(25, 50, 80, 0.8) 100%);
+    border-left-color: #38bdf8;
+}
+
+.sdx-journal-page-content .sdx-callout-info::before {
+    content: '\f05a';
+    color: #38bdf8;
+}
+
+/* Warning Callout - Yellow */
+.sdx-journal-page-content .sdx-callout-warning {
+    background: linear-gradient(135deg, rgba(80, 60, 20, 0.7) 0%, rgba(70, 50, 15, 0.8) 100%);
+    border-left-color: #fbbf24;
+}
+
+.sdx-journal-page-content .sdx-callout-warning::before {
+    content: '\f071';
+    color: #fbbf24;
+}
+
+/* Danger Callout - Red */
+.sdx-journal-page-content .sdx-callout-danger {
+    background: linear-gradient(135deg, rgba(80, 30, 30, 0.7) 0%, rgba(70, 25, 25, 0.8) 100%);
+    border-left-color: #f87171;
+}
+
+.sdx-journal-page-content .sdx-callout-danger::before {
+    content: '\f06a';
+    color: #f87171;
+}
+
+/* Success Callout - Green */
+.sdx-journal-page-content .sdx-callout-success {
+    background: linear-gradient(135deg, rgba(25, 60, 35, 0.7) 0%, rgba(20, 50, 30, 0.8) 100%);
+    border-left-color: #4ade80;
+}
+
+.sdx-journal-page-content .sdx-callout-success::before {
+    content: '\f00c';
+    color: #4ade80;
+}
+
+/* Quest Callout - Purple */
+.sdx-journal-page-content .sdx-callout-quest {
+    background: linear-gradient(135deg, rgba(60, 35, 80, 0.7) 0%, rgba(50, 30, 70, 0.8) 100%);
+    border-left-color: #c084fc;
+}
+
+.sdx-journal-page-content .sdx-callout-quest::before {
+    content: '\f5ae';
+    color: #c084fc;
+}
+
+/* Loot Callout - Gold */
+.sdx-journal-page-content .sdx-callout-loot {
+    background: linear-gradient(135deg, rgba(70, 55, 25, 0.7) 0%, rgba(60, 45, 20, 0.8) 100%);
+    border-left-color: #c9aa58;
+}
+
+.sdx-journal-page-content .sdx-callout-loot::before {
+    content: '\f3d1';
+    color: #c9aa58;
+}
+
+/* NPC Quote Callout */
+.sdx-journal-page-content .sdx-callout-npc {
+    background: linear-gradient(135deg, rgba(50, 50, 55, 0.7) 0%, rgba(40, 40, 45, 0.8) 100%);
+    border-left-color: #a3a3a3;
+    font-style: italic;
+}
+
+.sdx-journal-page-content .sdx-callout-npc::before {
+    content: '\f4ad';
+    color: #a3a3a3;
+}
+
+/* ============================================
+   DECORATIVE DIVIDERS
+   Add class="sdx-divider sdx-divider-TYPE" to divs
+   ============================================ */
+
+.sdx-journal-page-content .sdx-divider {
+    text-align: center;
+    margin: 20px 0;
+    color: #c9aa58;
+    font-size: 16px;
+    letter-spacing: 8px;
+}
+
+.sdx-journal-page-content .sdx-divider-swords::before {
+    content: '⚔ ═══════ ⚔';
+}
+
+.sdx-journal-page-content .sdx-divider-stars::before {
+    content: '✦ ═══ ★ ═══ ✦';
+}
+
+.sdx-journal-page-content .sdx-divider-skulls::before {
+    content: '☠ ═══════ ☠';
+}
+
+.sdx-journal-page-content .sdx-divider-crowns::before {
+    content: '♔ ═══════ ♔';
+}
+
+.sdx-journal-page-content .sdx-divider-simple::before {
+    content: '═══════════════';
+}
+
+/* ============================================
+   EDITOR QUICK-INSERT TOOLBAR
+   ============================================ */
+
+.sdx-journal-editor-dialog .sdx-editor-quick-toolbar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1e1e1e 100%) !important;
+    border-bottom: 1px solid #444 !important;
+    margin-bottom: 0 !important;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-quick-toolbar>* {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+}
+
+.sdx-journal-editor-dialog .sdx-quick-insert-btn {
+    padding: 4px 10px !important;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 100%) !important;
+    border: 1px solid #555 !important;
+    border-radius: 4px !important;
+    color: #ccc !important;
+    font-size: 11px !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    transition: all 0.15s ease !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+.sdx-journal-editor-dialog .sdx-quick-insert-btn:hover {
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%) !important;
+    border-color: #888 !important;
+    color: #fff !important;
+}
+
+.sdx-journal-editor-dialog .sdx-quick-insert-btn i {
+    font-size: 12px !important;
+}
+
+.sdx-quick-insert-btn.sdx-btn-info {
+    color: #38bdf8;
+}
+
+.sdx-quick-insert-btn.sdx-btn-info:hover {
+    color: #7dd3fc;
+}
+
+.sdx-quick-insert-btn.sdx-btn-warning {
+    color: #fbbf24;
+}
+
+.sdx-quick-insert-btn.sdx-btn-warning:hover {
+    color: #fcd34d;
+}
+
+.sdx-quick-insert-btn.sdx-btn-danger {
+    color: #f87171;
+}
+
+.sdx-quick-insert-btn.sdx-btn-danger:hover {
+    color: #fca5a5;
+}
+
+.sdx-quick-insert-btn.sdx-btn-quest {
+    color: #c084fc;
+}
+
+.sdx-quick-insert-btn.sdx-btn-quest:hover {
+    color: #d8b4fe;
+}
+
+.sdx-quick-insert-btn.sdx-btn-loot {
+    color: #c9aa58;
+}
+
+.sdx-quick-insert-btn.sdx-btn-loot:hover {
+    color: #e0c98a;
+}
+
+.sdx-quick-insert-btn.sdx-btn-npc {
+    color: #a3a3a3;
+}
+
+.sdx-quick-insert-btn.sdx-btn-npc:hover {
+    color: #d4d4d4;
+}
+
+.sdx-quick-insert-separator {
+    width: 1px;
+    background: #555;
+    margin: 0 4px;
+    align-self: stretch;
+}
+
+/* Preview Mode Toggle */
+.sdx-preview-toggle {
+    margin-left: auto;
+    padding: 4px 12px;
+    background: linear-gradient(180deg, rgba(201, 170, 88, 0.3) 0%, rgba(180, 150, 70, 0.3) 100%);
+    border: 1px solid rgba(201, 170, 88, 0.5);
+    color: #c9aa58;
+}
+
+.sdx-preview-toggle:hover {
+    background: linear-gradient(180deg, rgba(201, 170, 88, 0.5) 0%, rgba(180, 150, 70, 0.5) 100%);
+    border-color: #c9aa58;
+    color: #fff;
+}
+
+.sdx-preview-toggle.active {
+    background: linear-gradient(180deg, rgba(201, 170, 88, 0.6) 0%, rgba(180, 150, 70, 0.6) 100%);
+    border-color: #c9aa58;
+    color: #fff;
+}
+
+/* Preview Container */
+.sdx-editor-preview {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    background: #0b0b0b;
+    display: none;
+}
+
+.sdx-editor-preview.active {
+    display: block;
+}
+
+.sdx-editor-preview-hidden .editor {
+    display: none;
+}
+
+/* Help Tooltip */
+.sdx-editor-help {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.6);
+    border-top: 1px solid #333;
+    font-size: 10px;
+    color: #888;
+}
+
+.sdx-editor-help code {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 2px;
+    color: #aaa;
+}
+
+/* Editor container flex adjustments */
+.sdx-journal-editor-dialog .sdx-editor-container {
+    flex: 1;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-container .editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-container .editor-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-preview {
+    flex: 1;
+    min-height: 200px;
+    overflow-y: auto;
+    padding: 16px;
+    background: #0b0b0b;
+    color: #ffffff;
+}
+
+/* Preview text styling */
+.sdx-journal-editor-dialog .sdx-editor-preview p,
+.sdx-journal-editor-dialog .sdx-editor-preview li,
+.sdx-journal-editor-dialog .sdx-editor-preview td,
+.sdx-journal-editor-dialog .sdx-editor-preview th,
+.sdx-journal-editor-dialog .sdx-editor-preview span {
+    color: #ffffff !important;
+}
+
+
+
+.sdx-journal-editor-dialog .sdx-editor-preview h1 {
+    color: #c9aa58 !important;
+    text-align: center;
+    font-family: 'Old Newspaper Font', serif;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-preview h2,
+.sdx-journal-editor-dialog .sdx-editor-preview h3,
+.sdx-journal-editor-dialog .sdx-editor-preview h4,
+.sdx-journal-editor-dialog .sdx-editor-preview h5,
+.sdx-journal-editor-dialog .sdx-editor-preview h6 {
+    color: #c9aa58 !important;
+}
+
+/* Hide/Show toggle between editor and preview */
+.sdx-journal-editor-dialog .sdx-editor-container.sdx-editor-preview-hidden {
+    display: none !important;
+}
+
+/* ============================================
+   CALLOUT STYLING INSIDE PROSEMIRROR EDITOR
+   So users can see styled callouts while editing
+   ============================================ */
+
+/* Callout boxes in editor */
+.ProseMirror .sdx-callout {
+    position: relative;
+    margin: 12px 0;
+    padding: 12px 16px 12px 44px;
+    border-radius: 6px;
+    border-left: 4px solid;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.ProseMirror .sdx-callout::before {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    font-family: 'Font Awesome 6 Pro', 'Font Awesome 6 Free', 'Font Awesome 5 Pro', 'Font Awesome 5 Free', FontAwesome;
+    font-weight: 900;
+    font-size: 16px;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
+}
+
+/* Info - Blue */
+.ProseMirror .sdx-callout-info {
+    background: linear-gradient(135deg, rgba(30, 58, 95, 0.7) 0%, rgba(25, 50, 80, 0.8) 100%);
+    border-left-color: #38bdf8;
+}
+
+.ProseMirror .sdx-callout-info::before {
+    content: '\f05a';
+    color: #38bdf8;
+}
+
+/* Warning - Yellow */
+.ProseMirror .sdx-callout-warning {
+    background: linear-gradient(135deg, rgba(80, 60, 20, 0.7) 0%, rgba(70, 50, 15, 0.8) 100%);
+    border-left-color: #fbbf24;
+}
+
+.ProseMirror .sdx-callout-warning::before {
+    content: '\f071';
+    color: #fbbf24;
+}
+
+/* Danger - Red */
+.ProseMirror .sdx-callout-danger {
+    background: linear-gradient(135deg, rgba(80, 30, 30, 0.7) 0%, rgba(70, 25, 25, 0.8) 100%);
+    border-left-color: #f87171;
+}
+
+.ProseMirror .sdx-callout-danger::before {
+    content: '\f06a';
+    color: #f87171;
+}
+
+/* Quest - Purple */
+.ProseMirror .sdx-callout-quest {
+    background: linear-gradient(135deg, rgba(60, 35, 80, 0.7) 0%, rgba(50, 30, 70, 0.8) 100%);
+    border-left-color: #c084fc;
+}
+
+.ProseMirror .sdx-callout-quest::before {
+    content: '\f5ae';
+    color: #c084fc;
+}
+
+/* Loot - Gold */
+.ProseMirror .sdx-callout-loot {
+    background: linear-gradient(135deg, rgba(70, 55, 25, 0.7) 0%, rgba(60, 45, 20, 0.8) 100%);
+    border-left-color: #c9aa58;
+}
+
+.ProseMirror .sdx-callout-loot::before {
+    content: '\f3d1';
+    color: #c9aa58;
+}
+
+/* NPC - Gray */
+.ProseMirror .sdx-callout-npc {
+    background: linear-gradient(135deg, rgba(50, 50, 55, 0.7) 0%, rgba(40, 40, 45, 0.8) 100%);
+    border-left-color: #a3a3a3;
+    font-style: italic;
+}
+
+.ProseMirror .sdx-callout-npc::before {
+    content: '\f4ad';
+    color: #a3a3a3;
+}
+
+/* Dividers in editor */
+.ProseMirror .sdx-divider {
+    text-align: center;
+    margin: 16px 0;
+    color: #c9aa58;
+    font-size: 14px;
+    letter-spacing: 6px;
+}
+
+.ProseMirror .sdx-divider-swords::before {
+    content: '⚔ ═══════ ⚔';
+}
+
+.ProseMirror .sdx-divider-stars::before {
+    content: '✦ ═══ ★ ═══ ✦';
+}
+
+/* Ancient Manuscript styling for the editor itself (WYSIWYG) */
+.ProseMirror h1 {
+    font-family: 'Old Newspaper Font', serif !important;
+    text-align: center !important;
+    color: #c9aa58 !important;
+}
+
+
+
+.ProseMirror table th {
+    text-align: center !important;
+    font-family: 'Old Newspaper Font', serif !important;
+    color: #c9aa58 !important;
+}
+
+/* Final Overrides for Table Headers */
+.ProseMirror table tr:first-child th,
+.ProseMirror table tr:first-child td {
+    text-align: center !important;
+    font-family: 'Old Newspaper Font', serif !important;
+    color: #ffffff !important;
+    background: rgba(80, 65, 40, 0.5) !important;
+}
+
+/* Vertical Lines for Tables */
+.sdx-journal-page-content table thead th,
+.sdx-journal-page-content table thead td,
+.sdx-journal-page-content table tr th,
+.sdx-journal-page-content table tr td {
+    border-left: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+.ProseMirror table th,
+.ProseMirror table td {
+    border-left: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Final Header Consistency Overrides */
+.sdx-journal-editor-dialog .sdx-editor-preview h2,
+.ProseMirror h2 {
+    font-family: 'Old Newspaper Font', serif !important;
+    color: #d4b86a !important;
+    text-align: left !important;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-preview h3,
+.ProseMirror h3 {
+    font-family: 'Modesto Condensed', serif !important;
+    color: #e0c98a !important;
+    text-align: left !important;
+}
+
+.sdx-journal-editor-dialog .sdx-editor-preview h4,
+.sdx-journal-editor-dialog .sdx-editor-preview h5,
+.sdx-journal-editor-dialog .sdx-editor-preview h6,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+    font-family: 'Modesto Condensed', serif !important;
+    color: #e8d5a0 !important;
+    text-align: left !important;
+}
+
+/* ============================================
+   SPELLBOOK COMPENDIUM FILTER
+   ============================================ */
+
+.sdx-spellbook-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.25) 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+.sdx-spellbook-filter label {
+    font-weight: 600;
+    color: #4b4a44;
+    font-size: 0.85em;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.sdx-spellbook-filter .sdx-spellbook-compendium-select {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 0.85em;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 3px;
+    background: #fff;
+    cursor: pointer;
+    height: 26px;
+}
+
+.sdx-spellbook-filter .sdx-spellbook-compendium-select:hover {
+    border-color: #4b4a44;
+}
+
+.sdx-spellbook-filter .sdx-spellbook-compendium-select:focus {
+    outline: none;
+    border-color: #4b4a44;
+    box-shadow: 0 0 3px rgba(75, 74, 68, 0.3);
+}
+
+/* Carousing Modifiers Drawer */
+.sdx-modifiers-toggle-container {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 10;
+}
+
+.sdx-toggle-modifiers-btn {
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffd700;
+    border: 1px solid #444;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sdx-toggle-modifiers-btn:hover {
+    background: rgba(80, 0, 0, 0.8);
+    border-color: #ffd700;
+    box-shadow: 0 0 5px #ffd700;
+}
+
+.sdx-toggle-modifiers-btn.active {
+    background: #8b0000;
+    color: white;
+    border-color: white;
+}
+
+.sdx-modifiers-drawer {
+    position: absolute;
+    top: 35px;
+    left: 10px;
+    right: 10px;
+    background: rgba(20, 20, 20, 0.95);
+    border: 1px solid #c9ad6a;
+    border-radius: 4px;
+    padding: 0 8px;
+    z-index: 10;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+}
+
+.sdx-modifiers-drawer.expanded {
+    padding: 8px;
+    border-bottom: 2px solid #c9ad6a;
+    min-height: 107px;
+}
+
+.sdx-modifier-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    gap: 8px;
+}
+
+.sdx-modifier-row:last-child {
+    margin-bottom: 0;
+}
+
+.sdx-modifier-row label {
+    font-family: "Oregano", cursive;
+    font-size: 1.1em;
+    color: #c9ad6a;
+    text-shadow: 1px 1px 1px black;
+    white-space: nowrap;
+}
+
+.sdx-modifier-input {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 2px 5px;
+    width: 60px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.sdx-modifier-input:focus {
+    border-color: #c9ad6a;
+    outline: none;
+    box-shadow: 0 0 3px #c9ad6a;
+}
+
+/* Outcome formula customization in chat */
+.sdx-roll-custom-mod {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+/* Modifier display in card footer */
+.sdx-modifier-display {
+    color: #ffd700;
+    font-weight: bold;
+}

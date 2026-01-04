@@ -454,8 +454,11 @@ async function saveCarousingDrops(state) {
  */
 export function getCarousingSession() {
     const journal = getCarousingJournal();
-    if (!journal) return { selectedTableId: "default", selectedTier: null, confirmations: {}, phase: "setup", results: {} };
-    return journal.getFlag(MODULE_ID, "carousingSession") || { selectedTableId: "default", selectedTier: null, confirmations: {}, phase: "setup", results: {} };
+    const defaultSession = { selectedTableId: "default", selectedTier: null, confirmations: {}, phase: "setup", results: {}, modifiers: {} };
+    if (!journal) return defaultSession;
+    const session = journal.getFlag(MODULE_ID, "carousingSession") || defaultSession;
+    if (!session.modifiers) session.modifiers = {};
+    return session;
 }
 
 /**
@@ -554,6 +557,27 @@ export async function setPlayerConfirmation(userId, confirmed) {
         delete session.confirmations[userId];
     }
     await saveCarousingSession(session);
+}
+
+/**
+ * Set player roll modifier
+ * @param {string} userId - The user ID
+ * @param {string} type - 'outcome', 'benefits', or 'mishaps'
+ * @param {string} value - The modifier value (static or dice string)
+ */
+export async function setPlayerModifier(userId, type, value) {
+    const session = getCarousingSession();
+    if (!session.modifiers[userId]) session.modifiers[userId] = {};
+
+    if (!value || value.trim() === "") {
+        delete session.modifiers[userId][type];
+    } else {
+        session.modifiers[userId][type] = value.trim();
+    }
+
+    await saveCarousingSession(session);
+    // Don't re-render everything on every keystroke if called from input, 
+    // but useful for sync
 }
 
 /**
@@ -723,6 +747,22 @@ export async function pruneOfflineCarousingData() {
 // ============================================
 
 /**
+ * Calculate Renown bonus based on tiered system:
+ * 3 or less = 0
+ * 4-7 = +1
+ * 8-11 = +2
+ * 12 or higher = +3
+ * @param {number} renown 
+ * @returns {number}
+ */
+export function getRenownBonus(renown) {
+    if (renown >= 12) return 3;
+    if (renown >= 8) return 2;
+    if (renown >= 4) return 1;
+    return 0;
+}
+
+/**
  * Get online players with their carousing data
  */
 function getOnlinePlayers() {
@@ -736,7 +776,11 @@ function getOnlinePlayers() {
         : getCarousingTableById(session.selectedTableId);
 
     const selectedTier = session.selectedTier !== null ? activeTable.tiers[session.selectedTier] : null;
-    const cost = selectedTier?.cost || 0;
+    const totalTierCost = selectedTier?.cost || 0;
+
+    // Calculate how many players have characters dropped
+    const participantCount = Object.values(drops).length;
+    const splitCost = Math.ceil(totalTierCost / Math.max(1, participantCount));
 
     return game.users.filter(user => {
         if (!user.active) return false;
@@ -747,11 +791,12 @@ function getOnlinePlayers() {
         const droppedActorId = drops[user.id];
         const droppedActor = droppedActorId ? game.actors.get(droppedActorId) : null;
         const actorGp = droppedActor ? getActorTotalGp(droppedActor) : 0;
-        const canAfford = actorGp >= cost;
+        const canAfford = actorGp >= splitCost;
         const isConfirmed = session.confirmations[user.id] === true;
         const result = session.results?.[user.id];
         const renown = droppedActor ? (droppedActor.getFlag(MODULE_ID, "renown") || 0) : 0;
-        const totalBonus = selectedTier ? (selectedTier.bonus + renown) : renown;
+        const renownBonus = getRenownBonus(renown);
+        const totalBonus = selectedTier ? (selectedTier.bonus + renownBonus) : renownBonus;
 
         return {
             id: user.id,
@@ -823,11 +868,16 @@ async function executeExpandedCarousingRolls(session, tier, participants) {
         // Deduct shared cost from each participant
         await deductCoins(actor, costPerPerson);
 
-        // Get actor's renown for the carousing event roll
+        // Get actor's renown bonus for the carousing event roll
         const renown = actor.getFlag(MODULE_ID, "renown") || 0;
+        const renownBonus = getRenownBonus(renown);
 
-        // Roll 1d8 + tier bonus + renown for outcome table
-        const outcomeRoll = await new Roll(`1d8 + ${tier.bonus} + ${renown}`).evaluate();
+        // Get custom GM modifiers for this player
+        const playerMods = session.modifiers?.[participant.id] || {};
+        const outcomeMod = playerMods.outcome ? ` + ${playerMods.outcome}` : "";
+
+        // Roll 1d8 + tier bonus + renown bonus + custom modifier for outcome table
+        const outcomeRoll = await new Roll(`1d8 + ${tier.bonus} + ${renownBonus}${outcomeMod}`).evaluate();
         const outcomeDice = outcomeRoll.dice[0]?.total || outcomeRoll.total;
         const outcomeTotal = outcomeRoll.total;
         const outcome = getExpandedOutcome(outcomeTotal);
@@ -836,25 +886,23 @@ async function executeExpandedCarousingRolls(session, tier, participants) {
         const currentXp = actor.system?.level?.xp || 0;
         await actor.update({ "system.level.xp": currentXp + outcome.xp });
 
-        // Helper to apply % modifier to d100 roll
-        // % modifier is a percentage of the roll, e.g., -15% of 72 = -10.8
-        const applyPercentModifier = (diceRoll, percentMod) => {
-            const adjustment = Math.round(diceRoll * (percentMod / 100));
-            return Math.max(1, Math.min(100, diceRoll + adjustment));
+        // Helper to apply modifier to d100 roll
+        // Modifier is added directly to the roll, e.g., -20 + 40 = 20
+        const applyModifier = (diceRoll, modifier) => {
+            return Math.max(1, Math.min(100, diceRoll + modifier));
         };
 
         // Roll for benefits
         const benefitResults = [];
+        const benefitMod = playerMods.benefits ? ` + ${playerMods.benefits}` : "";
         for (let i = 0; i < outcome.benefits; i++) {
-            const benefitRoll = await new Roll(`1d100`).evaluate();
+            const benefitRoll = await new Roll(`1d100${benefitMod}`).evaluate();
             const diceResult = benefitRoll.total;
-            const adjustment = Math.round(diceResult * (outcome.modifier / 100));
-            const finalResult = applyPercentModifier(diceResult, outcome.modifier);
+            const finalResult = applyModifier(diceResult, outcome.modifier);
             const benefit = getExpandedBenefit(finalResult);
             benefitResults.push({
                 diceRoll: diceResult,
-                percentMod: outcome.modifier,
-                adjustment: adjustment,
+                modifier: outcome.modifier,
                 finalRoll: finalResult,
                 description: benefit.description
             });
@@ -862,16 +910,15 @@ async function executeExpandedCarousingRolls(session, tier, participants) {
 
         // Roll for mishaps
         const mishapResults = [];
+        const mishapMod = playerMods.mishaps ? ` + ${playerMods.mishaps}` : "";
         for (let i = 0; i < outcome.mishaps; i++) {
-            const mishapRoll = await new Roll(`1d100`).evaluate();
+            const mishapRoll = await new Roll(`1d100${mishapMod}`).evaluate();
             const diceResult = mishapRoll.total;
-            const adjustment = Math.round(diceResult * (outcome.modifier / 100));
-            const finalResult = applyPercentModifier(diceResult, outcome.modifier);
+            const finalResult = applyModifier(diceResult, outcome.modifier);
             const mishap = getExpandedMishap(finalResult);
             mishapResults.push({
                 diceRoll: diceResult,
-                percentMod: outcome.modifier,
-                adjustment: adjustment,
+                modifier: outcome.modifier,
                 finalRoll: finalResult,
                 description: mishap.description
             });
@@ -887,20 +934,23 @@ async function executeExpandedCarousingRolls(session, tier, participants) {
             mishaps: mishapResults
         };
 
-        // Build roll breakdown string for benefits/mishaps (shows % modifier)
+        // Build roll breakdown string for benefits/mishaps (shows modifier)
         const buildRollBreakdown = (r) => {
-            // Show: diceRoll × modPercent% = adjustment → final
-            if (r.percentMod === 0) {
+            // Show: diceRoll + modifier = final
+            if (r.modifier === 0) {
                 return `<span class="sdx-roll-dice">${r.diceRoll}</span> = <strong>${r.finalRoll}</strong>`;
             }
-            const sign = r.percentMod >= 0 ? '+' : '';
-            return `<span class="sdx-roll-dice">${r.diceRoll}</span> <span class="sdx-roll-mod">${sign}${r.percentMod}%</span> (<span class="sdx-adjustment">${r.adjustment >= 0 ? '+' : ''}${r.adjustment}</span>) = <strong>${r.finalRoll}</strong>`;
+            const sign = r.modifier >= 0 ? '+' : '';
+            return `<span class="sdx-roll-dice">${r.diceRoll}</span> <span class="sdx-roll-mod">${sign}${r.modifier}</span> = <strong>${r.finalRoll}</strong>`;
         };
 
-        // Build outcome roll display (includes renown if any)
+        // Build outcome roll display (includes renown and custom mods if any)
         let outcomeFormula = `${outcomeDice} + ${tier.bonus}`;
-        if (renown !== 0) {
-            outcomeFormula += ` <span class="sdx-roll-renown">+ ${renown}</span>`;
+        if (renownBonus !== 0) {
+            outcomeFormula += ` <span class="sdx-roll-renown">+ ${renownBonus}</span>`;
+        }
+        if (playerMods.outcome) {
+            outcomeFormula += ` <span class="sdx-roll-custom-mod">+ ${playerMods.outcome}</span>`;
         }
         outcomeFormula += ` = <strong>${outcomeTotal}</strong>`;
 
@@ -1093,8 +1143,12 @@ export async function executeCarousingRolls() {
         // Deduct shared cost from each participant
         await deductCoins(actor, costPerPerson);
 
-        // Roll 1d8 + bonus
-        const roll = await new Roll(`1d8 + ${tier.bonus}`).evaluate();
+        // Get custom GM modifiers for this player
+        const playerMods = session.modifiers?.[participant.id] || {};
+        const outcomeMod = playerMods.outcome ? ` + ${playerMods.outcome}` : "";
+
+        // Roll 1d8 + bonus + custom modifier
+        const roll = await new Roll(`1d8 + ${tier.bonus}${outcomeMod}`).evaluate();
         const diceResult = roll.dice[0]?.total || roll.total;
         const rollTotal = roll.total;
         const outcome = getOutcome(rollTotal, activeTable.outcomes);
@@ -1133,7 +1187,7 @@ export async function executeCarousingRolls() {
                         <strong class="sdx-player-name">${actor.name}</strong>
                         <div class="sdx-outcome-roll">
                             <span class="sdx-roll-label">Roll:</span>
-                            <span class="sdx-roll-formula">${diceResult} + ${tier.bonus} = <strong>${rollTotal}</strong></span>
+                            <span class="sdx-roll-formula">${diceResult} + ${tier.bonus}${playerMods.outcome ? ` + ${playerMods.outcome}` : ''} = <strong>${rollTotal}</strong></span>
                         </div>
                     </div>
                 </div>

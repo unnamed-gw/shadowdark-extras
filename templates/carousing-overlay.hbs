@@ -109,6 +109,37 @@
                             {{!-- FRONT FACE: Actor Portrait --}}
                             <div class="sdx-carousing-flip-front">
                                 {{#if this.hasDrop}}
+                                {{!-- GM MODIFIERS DRAWER --}}
+                                {{#if @root.isGM}}
+                                <div class="sdx-modifiers-toggle-container">
+                                    <button type="button" class="sdx-toggle-modifiers-btn"
+                                        data-action="toggle-modifiers"
+                                        data-tooltip="{{localize 'SHADOWDARK_EXTRAS.carousing.modifiers'}}"
+                                        data-user-id="{{this.id}}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                                <div class="sdx-modifiers-drawer" data-user-id="{{this.id}}">
+                                    <div class="sdx-modifier-row">
+                                        <label>{{localize "SHADOWDARK_EXTRAS.carousing.outcome"}}</label>
+                                        <input type="text" class="sdx-modifier-input" data-mod-type="outcome"
+                                            placeholder="+0" value="{{this.modifiers.outcome}}">
+                                    </div>
+                                    <div class="sdx-modifier-row">
+                                        <label>{{localize "SHADOWDARK_EXTRAS.carousing.benefits"}}</label>
+                                        <input type="text" class="sdx-modifier-input" data-mod-type="benefits"
+                                            placeholder="+0" value="{{this.modifiers.benefits}}">
+                                    </div>
+                                    {{#if @root.isExpandedMode}}
+                                    <div class="sdx-modifier-row">
+                                        <label>{{localize "SHADOWDARK_EXTRAS.carousing.mishaps"}}</label>
+                                        <input type="text" class="sdx-modifier-input" data-mod-type="mishaps"
+                                            placeholder="+0" value="{{this.modifiers.mishaps}}">
+                                    </div>
+                                    {{/if}}
+                                </div>
+                                {{/if}}
+
                                 <img class="sdx-carousing-card-portrait" src="{{this.droppedActorImg}}"
                                     alt="{{this.droppedActorName}}" />
                                 <span class="sdx-carousing-card-charname">{{this.droppedActorName}}</span>
@@ -273,7 +304,9 @@
                             <span class="sdx-carousing-card-bonus"
                                 title="{{localize 'SHADOWDARK_EXTRAS.carousing.total_bonus_hint'}}">
                                 <i class="fas fa-dice-d20"></i>
-                                {{#if ../hasSelectedTier}}+{{this.totalBonus}}{{else}}+{{this.renown}}{{/if}}
+                                {{#if ../hasSelectedTier}}+{{this.totalBonus}}{{#if this.modifiers.outcome}}<span
+                                    class="sdx-modifier-display">
+                                    {{this.modifiers.outcome}}</span>{{/if}}{{else}}+{{this.renown}}{{/if}}
                             </span>
                         </div>
                         {{/if}}

@@ -664,5 +664,13 @@
   "SHADOWDARK_EXTRAS.settings.enable_weapon_animations.name": "Enable Weapon Animations",
   "SHADOWDARK_EXTRAS.settings.enable_weapon_animations.hint": "Show equipped weapon images on tokens (requires Sequencer module)",
   "SHADOWDARK_EXTRAS.settings.enable_level_up_animation.name": "Enable Level Up Token Animation",
-  "SHADOWDARK_EXTRAS.settings.enable_level_up_animation.hint": "Show a glowing arrow on tokens when a character has enough XP to level up (requires Sequencer module)"
+  "SHADOWDARK_EXTRAS.settings.enable_level_up_animation.hint": "Show a glowing arrow on tokens when a character has enough XP to level up (requires Sequencer module)",
+  "SHADOWDARK_EXTRAS.spellbook.compendiumFilter.label": "Compendium:",
+  "SHADOWDARK_EXTRAS.spellbook.compendiumFilter.all": "All Compendiums",
+  "SHADOWDARK_EXTRAS.focus_tracker.concentration_name": "Concentration: {spellName}",
+  "SHADOWDARK_EXTRAS.focus_tracker.concentration_description": "<p>Maintaining focus on <strong>{spellName}</strong>.</p><p>Requires a focus check at the start of each turn to maintain.</p>",
+  "SHADOWDARK_EXTRAS.carousing.modifiers": "GM Roll Modifiers",
+  "SHADOWDARK_EXTRAS.carousing.outcome": "Outcome",
+  "SHADOWDARK_EXTRAS.carousing.benefits": "Benefits",
+  "SHADOWDARK_EXTRAS.carousing.mishaps": "Mishaps"
 }

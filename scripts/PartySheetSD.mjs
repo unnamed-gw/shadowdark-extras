@@ -452,11 +452,32 @@ export default class PartySheetSD extends ActorSheet {
 		const treasure = [];
 		const freeCarrySeen = {};
 
+		// Check if unidentified feature is enabled
+		let unidentifiedEnabled = false;
+		try {
+			unidentifiedEnabled = game.settings.get(MODULE_ID, "enableUnidentified");
+		} catch {
+			// Setting not registered yet
+		}
+
 		for (const item of this.actor.items) {
 			if (!item.system.isPhysical) continue;
 
 			const itemData = item.toObject();
 			itemData.uuid = item.uuid;
+
+			// Handle unidentified items - mask name for non-GM users
+			const isUnidentified = unidentifiedEnabled && Boolean(item.getFlag(MODULE_ID, "unidentified"));
+			itemData.isUnidentified = isUnidentified;
+			if (isUnidentified && !game.user.isGM) {
+				const customName = item.getFlag(MODULE_ID, "unidentifiedName");
+				itemData.displayName = (customName && customName.trim())
+					? customName.trim()
+					: game.i18n.localize("SHADOWDARK_EXTRAS.item.unidentified.label");
+			} else {
+				itemData.displayName = item.name;
+			}
+
 			itemData.showQuantity = item.system.quantity > 1 ||
 				item.system.isAmmunition ||
 				(item.system.slots?.per_slot > 1);
